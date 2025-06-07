@@ -1,0 +1,93 @@
+Let me analyze this systematically using Chain-of-Thought reasoning:
+
+### 1. Understanding Core Requirements
+**a) Data Model Complexity:**
+- User profiles: Structured data with clear schema (name, bio, etc.)
+- Posts: Semi-structured (text, media, metadata)
+- Social connections: Graph-like relationships (who follows whom)
+
+**b) Access Patterns:**
+- 80% reads: Need optimized query performance for feeds, profiles
+- 20% writes: Must handle but not primary optimization target
+- Critical operations: 
+  * Read: Fetch user feed (posts from connections), profile views
+  * Write: New posts, connection updates
+
+**c) Scale:**
+- Millions of users → billions of connections
+- Must scale horizontally
+
+### 2. Database Type Evaluation
+
+**Option 1: Relational (SQL)**
+- 👍 Strong consistency for transactions
+- 👍 Handles structured data well
+- 👎 JOINs become expensive at scale (especially for graph traversals like "friends of friends")
+- 👎 Vertical scaling limits
+
+**Option 2: Document (NoSQL)**
+- 👍 Good for profiles/posts (JSON documents)
+- 👍 Horizontal scaling
+- 👎 Poor for graph relationships (would need application-side joins)
+- 👎 No native graph traversal
+
+**Option 3: Graph (e.g., Neo4j)**
+- 👍 Perfect for social connections
+- 👍 Fast graph traversals
+- 👎 Suboptimal for post storage/retrieval
+- 👎 Higher operational complexity
+
+**Option 4: Hybrid Approach**
+- 👍 Specialized databases for different needs
+- 👎 Increased complexity
+- 👎 Cross-database transactions
+
+**Option 5: Wide-column (e.g., Cassandra)**
+- 👍 Excellent horizontal scaling
+- 👍 Good for feed timelines (time-series data)
+- 👎 Requires careful data modeling
+
+### 3. Decision Analysis
+
+**Primary Decision Drivers:**
+1. **Social connections** demand efficient graph operations → favors Graph
+2. **Profile/post storage** needs flexible schemas → favors Document
+3. **Read performance** at scale → favors denormalized approaches
+
+**Winning Solution: Polyglot Persistence**
+- **Graph database** for social connections (Neo4j/Dgraph)
+  * Stores follower/following relationships
+  * Enables efficient "friends-of-friends" queries
+- **Document database** for profiles/posts (MongoDB/Couchbase)
+  * Natural fit for hierarchical profile data
+  * Flexible schema for evolving post formats
+- **Cache layer** (Redis) for hot feeds
+  * Materialized views of pre-computed feeds
+
+### 4. Requirement Mapping
+
+| Requirement          | Solution Component          | Rationale                                                                 |
+|----------------------|----------------------------|---------------------------------------------------------------------------|
+| Millions of users    | Horizontally scaling DBs   | Document/Graph DBs scale out better than relational                      |
+| User profiles        | Document DB                | Nested, semi-structured data fits document model well                     |
+| Posts                | Document DB                | Flexible schema handles varying post types                                |
+| Social connections   | Graph DB                   | Constant-time relationship traversals regardless of graph size            |
+| High read performance| Read replicas + caching    | 80% reads benefit from replication and materialized views                 |
+| Write scaling        | Sharded document storage   | 20% writes distributed across clusters                                   |
+
+### 5. Implementation Example
+
+**Data Flow:**
+1. User posts → Document DB (with cache invalidation)
+2. New follow → Graph DB (relationship created)
+3. Reading feed:
+   a) Graph DB fetches followed users
+   b) Document DB fetches posts by those users
+   c) (Optional) Cache stores pre-computed feeds
+
+**Tradeoffs Accepted:**
+- Eventual consistency for feeds
+- Higher operational complexity
+- No single-database ACID transactions across all data
+
+This architecture provides the optimal balance between read performance, scalability, and data model fit for a social platform at scale.

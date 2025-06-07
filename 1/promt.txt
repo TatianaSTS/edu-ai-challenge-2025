@@ -1,0 +1,15 @@
+DeepSeek
+You are a software architecture expert. I’m designing a social platform with the following requirements:
+
+Millions of users
+Need to store user profiles, posts, and social connections (e.g., followers, friends)
+High read performance is critical
+80% of operations are reads, 20% are writes
+The system must scale efficiently as the user base grows
+Apply Chain-of-Thought (CoT) reasoning to:
+
+Analyze each requirement step-by-step
+Evaluate different types of databases (e.g., relational, NoSQL, graph, document, key-value)
+Justify which type of database is most suitable for this project
+Clearly explain how each requirement influenced your final decision
+Your reasoning should be structured, logical, and transparent.
