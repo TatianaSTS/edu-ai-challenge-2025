@@ -1,0 +1,10 @@
+I have a bug note “Logout button doesn’t work on Safari. It just doesn’t respond.” 
+Your task is to convert informal bug notes into clear, well-structured bug tickets. The output should follow this format:
+Title
+Description
+Steps to Reproduce
+Expected vs Actual Behavior
+Environment (if known)
+Severity or Impact
+
+Please convert this note into a structured bug ticket.
